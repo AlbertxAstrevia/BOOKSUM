@@ -1,0 +1,2403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BOOKSUM">
+  <meta name="theme-color" content="#FDF8F0">
+  <title>BOOKSUM v2</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Google Identity Services (for Drive OAuth) -->
+  <script src="https://accounts.google.com/gsi/client" async></script>
+
+  <!-- React & Babel -->
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+  <style>
+    /* CSS Variables & Design Tokens */
+    :root {
+      --cream: #FDF8F0;
+      --cream2: #F5EDD8;
+      --blue: #3B82F6;
+      --blue-dark: #2563EB;
+      --blue-light: #EFF6FF;
+      --amber: #D97706;
+      --violet: #7C3AED;
+      --ink: #1C1C1E;
+      --muted: #6B7280;
+      --white: #FFFFFF;
+      --green: #10B981;
+      --red: #EF4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body, #root {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+    }
+
+    /* App Container */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100vh;
+      background: var(--cream);
+    }
+
+    /* Main Content Area */
+    .screen-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-bottom: calc(60px + env(safe-area-inset-bottom));
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      padding-bottom: env(safe-area-inset-bottom);
+      background: var(--white);
+      border-top: 1px solid #E5E5E5;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .nav-item.active {
+      color: var(--blue);
+    }
+
+    /* Header */
+    .header {
+      padding: 16px;
+      background: var(--white);
+      border-bottom: 1px solid #E5E5E5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .header-title.amber { color: var(--amber); }
+    .header-title.blue { color: var(--blue); }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--blue-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--blue);
+    }
+
+    /* Search Bar */
+    .search-bar {
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid #E5E5E5;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--blue);
+      background: var(--blue-light);
+    }
+
+    /* Genre Dropdown */
+    .genre-dropdown {
+      padding: 0 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .genre-select {
+      padding: 10px 12px;
+      border: 1px solid #E5E5E5;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      background: var(--white);
+      cursor: pointer;
+    }
+
+    .genre-select:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    /* Section Label */
+    .section-label {
+      padding: 16px 16px 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Book Grid */
+    .book-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 0 12px 16px;
+    }
+
+    .book-card {
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .book-card:active {
+      transform: scale(0.98);
+    }
+
+    .book-card-image {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      background: linear-gradient(135deg, var(--blue-light), var(--cream2));
+    }
+
+    .book-card-content {
+      padding: 12px;
+    }
+
+    .book-card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+
+    .book-card-author {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .genre-tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: var(--white);
+    }
+
+    .btn-primary:active {
+      background: var(--blue-dark);
+    }
+
+    .btn-secondary {
+      background: var(--cream2);
+      color: var(--ink);
+    }
+
+    .btn-secondary:active {
+      background: #E5DCC8;
+    }
+
+    .btn-sm {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    /* Detail Screen */
+    .detail-header {
+      position: relative;
+      padding-bottom: 200px;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      color: var(--white);
+      overflow: hidden;
+    }
+
+    .detail-back-btn {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 8px;
+      color: var(--white);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .detail-hero {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 200px;
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      align-items: flex-end;
+    }
+
+    .detail-hero-image {
+      width: 120px;
+      height: 160px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--cream);
+    }
+
+    .detail-hero-text {
+      flex: 1;
+      color: var(--white);
+    }
+
+    .detail-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+
+    .detail-author {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    .detail-genre-tag {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.2);
+      color: var(--white);
+    }
+
+    .detail-tabs {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      background: var(--white);
+      border-bottom: 1px solid #E5E5E5;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .tab {
+      padding: 8px 0;
+      border: none;
+      background: none;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      color: var(--blue);
+      border-bottom-color: var(--blue);
+    }
+
+    .tab-content {
+      padding: 16px;
+    }
+
+    /* Editor */
+    .editor-toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--white);
+      border-bottom: 1px solid #E5E5E5;
+      flex-wrap: wrap;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .toolbar-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #E5E5E5;
+      border-radius: 6px;
+      background: var(--white);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .toolbar-btn:active {
+      background: var(--blue-light);
+      border-color: var(--blue);
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 24px;
+      background: #E5E5E5;
+      margin: 0 4px;
+    }
+
+    .contenteditable {
+      padding: 16px;
+      font-size: 16px;
+      line-height: 1.6;
+      outline: none;
+      background: var(--white);
+      color: var(--ink);
+    }
+
+    .contenteditable:focus {
+      background: var(--blue-light);
+    }
+
+    /* Form Inputs */
+    .form-group {
+      padding: 12px 0;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #E5E5E5;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--blue);
+      background: var(--blue-light);
+    }
+
+    /* Genre Chips */
+    .genre-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .genre-chip {
+      padding: 8px 12px;
+      border: 2px solid #E5E5E5;
+      border-radius: 20px;
+      background: var(--white);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .genre-chip.selected {
+      border-color: var(--blue);
+      background: var(--blue-light);
+      color: var(--blue);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: flex-end;
+      z-index: 2000;
+    }
+
+    .modal {
+      width: 100%;
+      background: var(--white);
+      border-radius: 16px 16px 0 0;
+      padding: 20px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 16px;
+      right: 16px;
+      background: var(--ink);
+      color: var(--white);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 1500;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Card */
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #E5E5E5;
+    }
+
+    .card-gradient {
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      color: var(--white);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--muted);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    /* Toggle */
+    .toggle-btn {
+      display: inline-flex;
+      gap: 8px;
+      background: var(--cream2);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 4px;
+    }
+
+    .toggle-btn-item {
+      flex: 1;
+      padding: 8px 16px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn-item.active {
+      background: var(--white);
+      color: var(--blue);
+    }
+
+    /* Stats */
+    .stat-pills {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      padding: 0 16px 16px;
+    }
+
+    .stat-pill {
+      background: var(--white);
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #E5E5E5;
+    }
+
+    .stat-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--blue);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .book-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useCallback, useEffect, useRef, createContext } = React;
+
+    // ============================================================================
+    // UTILITIES & CONSTANTS
+    // ============================================================================
+
+    const DEFAULT_GENRES = [
+      { id: 'psychology',   label: '🧠 Psychology',         color: '#EFF6FF', text: '#3B82F6' },
+      { id: 'science',      label: '🔬 Science',             color: '#ECFDF5', text: '#059669' },
+      { id: 'health',       label: '❤️ Health & Medicine',   color: '#FEF9C3', text: '#854D0E' },
+      { id: 'history',      label: '📜 History & Society',   color: '#FEE2E2', text: '#991B1B' },
+      { id: 'philosophy',   label: '💭 Philosophy',          color: '#F3E8FF', text: '#7C3AED' },
+      { id: 'business',     label: '💼 Business',            color: '#FEF3C7', text: '#D97706' },
+      { id: 'startups',     label: '🚀 Startups & VC',       color: '#DBEAFE', text: '#1D4ED8' },
+      { id: 'biographies',  label: '📖 Biographies',         color: '#FCE7F3', text: '#9D174D' },
+      { id: 'economics',    label: '💰 Economics',           color: '#E0F2FE', text: '#0369A1' },
+      { id: 'technology',   label: '💻 Technology & AI',     color: '#F1F5F9', text: '#475569' },
+      { id: 'selfdev',      label: '🌱 Self-Development',    color: '#DCFCE7', text: '#166534' },
+    ];
+
+    const SEED_BOOKS = [
+      { id:1,  genre:'science',      title:'How to Avoid a Climate Disaster',                                    author:'Bill Gates',           imageId:'1tPCpHXtcsNMOPfPoMDSX7TvKLR6RSFS7', summaryId:'1iLQGdcH-D7rTXiVPcoMCg08spZlgTxAb', notes:'', keyIdeas:[], addedAt:1609459200000 },
+      { id:2,  genre:'biographies',  title:'A Spy and a Traitor',                                               author:'Ben Macintyre',        imageId:'1ZsyPryKfzvjo2W3Zeyj-pWt_ESiHzqFj', summaryId:'1FpzllTG1_O0VDbtp8YTUlE690PjYjohl', notes:'', keyIdeas:[], addedAt:1612137600000 },
+      { id:3,  genre:'health',       title:'The Body: A Guide for Occupants',                                   author:'Bill Bryson',          imageId:'178yf8L1DaoiJj85rugA3JndFrZEVMjYW', summaryId:'1IIwokYk_liyL-VpzOdtqcFPMgZpZsCfz', notes:'', keyIdeas:[], addedAt:1614556800000 },
+      { id:4,  genre:'startups',     title:'Blitzscaling',                                                      author:'Reid Hoffman',         imageId:'1mAN25PROZPN-lKg3Z5lCrZXqV-lunuoW', summaryId:'1GQRg-w31oGBSo_WpRbB4MYb8CwPmiJOI', notes:'', keyIdeas:[], addedAt:1617235200000 },
+      { id:5,  genre:'science',      title:'A Field Guide to Lies and Statistics',                              author:'Daniel Levitin',       imageId:'1XDaAaYILU24k1_Y2cGvJYvCajVIpqUVk', summaryId:'1IndNhz7XMF8x9wInX6ppVNXGmPbgk71h', notes:'', keyIdeas:[], addedAt:1619827200000 },
+      { id:6,  genre:'history',      title:'Homo Deus: A Brief History of Tomorrow',                           author:'Yuval Noah Harari',    imageId:'1dSQBeLemO5NljC17_krZGkQIu7EeHP4b', summaryId:'1I6GyPk_pt0aoiCduIcQ1AnO5Zy_V-4HE', notes:'', keyIdeas:[], addedAt:1622505600000 },
+      { id:7,  genre:'history',      title:'Sapiens: A Brief History of Humankind',                            author:'Yuval Noah Harari',    imageId:'1SzK0LajaoMvJzZ9CXgztysMzuvGrjssB', summaryId:'1IldcM49vg2VviAyRCM2-38-R4YkTBW12', notes:'', keyIdeas:[], addedAt:1625097600000 },
+      { id:8,  genre:'science',      title:'What If?: Serious Scientific Answers to Absurd Hypothetical Questions', author:'Randall Munroe', imageId:'1x5TdmcCGVaXRcobRLLEbLMaW-o8lkBJp', summaryId:'1Gez8oM8Yt0-gO7WSeFM8en198Is3RXh7', notes:'', keyIdeas:[], addedAt:1627776000000 },
+      { id:9,  genre:'psychology',   title:'The Happiness Advantage',                                          author:'Shawn Achor',          imageId:'1lGMSRZD6kZ1Og33g2J1N53Q6sdJd2kF7', summaryId:'1IwCAQk02eBhUU4JIdtst5i1JcJBj2NFN', notes:'', keyIdeas:[], addedAt:1630454400000 },
+      { id:10, genre:'health',       title:"Lifespan: Why We Age — and Why We Don't Have To",                  author:'David A. Sinclair',    imageId:'15orXZ_1oagzzPF9XA-bdSs4uxiD7fFsE', summaryId:'1G9D6lJfHVcEI6YXxB0QHHKcSz72IlFZL', notes:'', keyIdeas:[], addedAt:1633046400000 },
+      { id:11, genre:'health',       title:'Why We Sleep: The New Science of Sleep and Dreams',                author:'Matthew Walker',       imageId:'1UN-VkBo5_06KJTDxh8g1TPXwlNgl6ijJ', summaryId:'1Gx6uN9pVsw0NUrWoQ9aQZEs0LoEK0wUB', notes:'', keyIdeas:[], addedAt:1635724800000 },
+      { id:12, genre:'psychology',   title:'Influence: The Psychology of Persuasion',                          author:'Robert B. Cialdini',   imageId:'1qAoKRFZkz21Xh-vwqDz19ny48zPPf_7z', summaryId:'1GZ3pXxY8LNkJmLmB7oxSt4xGBR3owrMO', notes:'', keyIdeas:[], addedAt:1638316800000 },
+      { id:13, genre:'startups',     title:'The Lean Startup',                                                  author:'Eric Ries',            imageId:'12ZL-oLtACGKkocVphif3YdhisRk4GOaB', summaryId:'1GoQ13RusBG__RALkZZDKTHufNNyPOdxW', notes:'', keyIdeas:[], addedAt:1640995200000 },
+      { id:14, genre:'startups',     title:'Secrets of Sand Hill Road',                                        author:'Scott Kupor',          imageId:'1zPDQ3gPSOnf6Q1ZJ9ab4l88BwcINXfEq', summaryId:'1GjDOSTp2avXSWoWGorG_lMGlnO-Cpb86', notes:'', keyIdeas:[], addedAt:1643673600000 },
+      { id:15, genre:'philosophy',   title:'Erkenne die Welt: Geschichte der Philosophie 1',                  author:'Richard David Precht', imageId:'1s9XX4yg1fCAw_KT3b0vHjsVk9cvNlo03', summaryId:'1cH_SYMO_1nctWGdBPfx8qD7i2KF8Qu80', notes:'', keyIdeas:[], addedAt:1646092800000 },
+      { id:16, genre:'psychology',   title:'Emotional Intelligence',                                            author:'Daniel Goleman',       imageId:'1WjGqvv4pepSITQgZnRnxONs23bMd5Vhe', summaryId:'1TrkrCuW_CX8FNh3s4dVaKfpIWYA6OU94', notes:'', keyIdeas:[], addedAt:1648771200000 },
+      { id:17, genre:'business',     title:'The Making of a Manager',                                          author:'Julie Zhuo',           imageId:'1WFjjac7H8DKFjzMdz_kv1qUtnjBdG52P', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1651363200000 },
+      { id:18, genre:'philosophy',   title:'Freiheit für alle: Das Ende der Arbeit wie wir sie kannten',     author:'Richard David Precht', imageId:'1Sjvt1o-pbf-BNoYq6bw0FEXJ4J93Fc4O', summaryId:'14TkM7hUS-czDSIhfGQLFjMWDV3noikeL', notes:'', keyIdeas:[], addedAt:1654041600000 },
+      { id:19, genre:'biographies',  title:'Freedom in Exile: Autobiography of the Dalai Lama',              author:'14th Dalai Lama',      imageId:'1_l_6ocBMrfd4NX43ILF8Nqyx8-JhEOrA', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1656633600000 },
+      { id:20, genre:'philosophy',   title:'Von der Pflicht: Eine Betrachtung',                               author:'Richard David Precht', imageId:'1QIA6mrnkmj5nhSyR6EVFF8Mb-KVntuP8', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1659312000000 },
+      { id:21, genre:'startups',     title:'Zero to One',                                                      author:'Peter Thiel',          imageId:'1y3CW7ETKFSu2XsGIRKZmz5hETWKk7JnE', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1661990400000 },
+    ];
+
+    const driveImg = (id) => id ? `https://drive.google.com/thumbnail?id=${id}&sz=w400` : '';
+    const drivePdf = (id) => id ? `https://drive.google.com/file/d/${id}/view` : '';
+
+    function useLocalStorage(key, def) {
+      const [val, setVal] = useState(() => {
+        try {
+          const s = localStorage.getItem(key);
+          return s ? JSON.parse(s) : def;
+        } catch {
+          return def;
+        }
+      });
+      const set = useCallback((v) => {
+        const next = typeof v === 'function' ? v(val) : v;
+        setVal(next);
+        try {
+          localStorage.setItem(key, JSON.stringify(next));
+        } catch {}
+      }, [key, val]);
+      return [val, set];
+    }
+
+    async function callClaude(apiKey, messages, imageBase64 = null) {
+      const content = imageBase64
+        ? [{ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } }, { type: 'text', text: messages }]
+        : [{ type: 'text', text: messages }];
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1500,
+          messages: [{ role: 'user', content }]
+        })
+      });
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      const data = await res.json();
+      return data.content[0].text;
+    }
+
+    // ============================================================================
+    // GOOGLE DRIVE SYNC HELPERS
+    // ============================================================================
+
+    const DRIVE_FILE_NAME = 'BOOKSUM_data.json';
+    const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+
+    async function driveFetch(token, method, url, body = null, isForm = false) {
+      const headers = { Authorization: `Bearer ${token}` };
+      const opts = { method, headers };
+      if (body && !isForm) {
+        headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+      } else if (body && isForm) {
+        opts.body = body;
+      }
+      const res = await fetch(url, opts);
+      if (!res.ok) {
+        const txt = await res.text().catch(() => res.status);
+        throw new Error(`Drive API ${res.status}: ${txt}`);
+      }
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('json')) return res.json();
+      return res.text();
+    }
+
+    async function findDriveFile(token, name) {
+      const q = encodeURIComponent(`name='${name}' and not trashed`);
+      const data = await driveFetch(token, 'GET',
+        `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime)&pageSize=5`
+      );
+      return data.files?.[0] || null;
+    }
+
+    async function createDriveFile(token, name, content) {
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify({ name, mimeType: 'application/json' })], { type: 'application/json' }));
+      form.append('file', new Blob([content], { type: 'application/json' }));
+      return driveFetch(token, 'POST',
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+        form, true
+      );
+    }
+
+    async function updateDriveFile(token, fileId, content) {
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify({ mimeType: 'application/json' })], { type: 'application/json' }));
+      form.append('file', new Blob([content], { type: 'application/json' }));
+      return driveFetch(token, 'PATCH',
+        `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart&fields=id`,
+        form, true
+      );
+    }
+
+    async function readDriveFile(token, fileId) {
+      const result = await driveFetch(token, 'GET',
+        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`
+      );
+      return typeof result === 'string' ? JSON.parse(result) : result;
+    }
+
+    // ============================================================================
+    // LOGO COMPONENT
+    // ============================================================================
+
+    function LogoSVG({ size = 28 }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="74" width="84" height="14" rx="4" fill="#89CFF0"/>
+          <rect x="12" y="77" width="28" height="5" rx="2" fill="white" opacity="0.45"/>
+          <rect x="52" y="77" width="18" height="5" rx="2" fill="white" opacity="0.35"/>
+          <rect x="10" y="60" width="80" height="14" rx="4" fill="#6BCB77"/>
+          <rect x="14" y="63" width="26" height="5" rx="2" fill="white" opacity="0.4"/>
+          <rect x="12" y="46" width="76" height="14" rx="4" fill="#5B9BD5"/>
+          <rect x="16" y="49" width="20" height="5" rx="2" fill="white" opacity="0.45"/>
+          <rect x="62" y="47" width="18" height="11" rx="3" fill="#9B6A3B"/>
+          <rect x="65" y="50" width="10" height="4" rx="2" fill="white" opacity="0.45"/>
+          <rect x="14" y="32" width="72" height="14" rx="4" fill="#FFD93D"/>
+          <rect x="18" y="35" width="26" height="5" rx="2" fill="white" opacity="0.35"/>
+          <circle cx="53" cy="38" r="3" fill="#888" opacity="0.3"/>
+          <circle cx="62" cy="38" r="3" fill="#888" opacity="0.3"/>
+          <circle cx="71" cy="38" r="3" fill="#888" opacity="0.3"/>
+          <rect x="16" y="20" width="68" height="13" rx="4" fill="#FF6B6B"/>
+          <rect x="20" y="23" width="24" height="5" rx="2" fill="white" opacity="0.4"/>
+          <rect x="54" y="23" width="16" height="5" rx="2" fill="white" opacity="0.25"/>
+        </svg>
+      );
+    }
+
+    // ============================================================================
+    // TOAST NOTIFICATION
+    // ============================================================================
+
+    function Toast({ message, onDismiss }) {
+      useEffect(() => {
+        const timer = setTimeout(onDismiss, 2500);
+        return () => clearTimeout(timer);
+      }, [onDismiss]);
+      return <div className="toast">{message}</div>;
+    }
+
+    // ============================================================================
+    // LIBRARY SCREEN
+    // ============================================================================
+
+    function LibraryScreen({ books, genres, onSelectBook, apiKey, onNavigate }) {
+      const [search, setSearch] = useState('');
+      const [selectedGenre, setSelectedGenre] = useState('all');
+
+      const filtered = books.filter(b => {
+        const matchSearch = !search || b.title.toLowerCase().includes(search.toLowerCase()) || b.author.toLowerCase().includes(search.toLowerCase());
+        const matchGenre = selectedGenre === 'all' || b.genre === selectedGenre;
+        return matchSearch && matchGenre;
+      });
+
+      const sorted = [...filtered].sort((a, b) => b.addedAt - a.addedAt);
+      const genreObj = genres.find(g => g.id === selectedGenre);
+      const count = selectedGenre === 'all' ? sorted.length : sorted.length;
+
+      return (
+        <>
+          <div className="header">
+            <div className="header-left">
+              <LogoSVG size={28} />
+              <span className="header-title amber">BOOKSUM</span>
+            </div>
+            <div className="avatar">A</div>
+          </div>
+
+          <div className="screen-content">
+            <div className="search-bar">
+              <input
+                className="search-input"
+                type="text"
+                placeholder="Search books..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                inputMode="search"
+              />
+            </div>
+
+            <div className="genre-dropdown">
+              <select
+                className="genre-select"
+                value={selectedGenre}
+                onChange={(e) => setSelectedGenre(e.target.value)}
+              >
+                <option value="all">All Genres</option>
+                {genres.map(g => (
+                  <option key={g.id} value={g.id}>{g.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {count > 0 && (
+              <div className="section-label">
+                {count === 1 ? `1 book` : `${count} books`} {selectedGenre !== 'all' ? `in ${genreObj?.label || 'Genre'}` : ''}
+              </div>
+            )}
+
+            {sorted.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">📚</div>
+                <p>No books found. Add your first book!</p>
+              </div>
+            ) : (
+              <div className="book-grid">
+                {sorted.map(book => {
+                  const bg = genres.find(g => g.id === book.genre);
+                  return (
+                    <div key={book.id} className="book-card" onClick={() => onSelectBook(book)}>
+                      <img
+                        src={driveImg(book.imageId)}
+                        alt={book.title}
+                        className="book-card-image"
+                        onError={(e) => {
+                          e.target.style.background = bg?.color || '#EFF6FF';
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                      <div className="book-card-content">
+                        <div className="book-card-title">{book.title}</div>
+                        <div className="book-card-author">{book.author}</div>
+                        <div className="genre-tag" style={{ backgroundColor: bg?.color, color: bg?.text }}>
+                          {bg?.label.replace(/[🧠🔬❤️📜💭💼🚀📖💰💻🌱]/g, '').trim()}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
+      );
+    }
+
+    // ============================================================================
+    // BOOK DETAIL SCREEN
+    // ============================================================================
+
+    function BookDetailScreen({ book, genres, onBack, onUpdate, apiKey }) {
+      const [activeTab, setActiveTab] = useState('ideas');
+      const [isEditingNotes, setIsEditingNotes] = useState(false);
+      const [notesContent, setNotesContent] = useState(book.notes);
+      const [toast, setToast] = useState(null);
+      const editorRef = useRef(null);
+      const scanRef = useRef(null);
+
+      const genre = genres.find(g => g.id === book.genre);
+
+      const handleSaveNotes = () => {
+        onUpdate({ ...book, notes: notesContent });
+        setIsEditingNotes(false);
+        setToast('Notes saved');
+      };
+
+      const handleGenerateIdeas = async () => {
+        if (!apiKey) {
+          setToast('API key required');
+          return;
+        }
+        if (!notesContent) {
+          setToast('Add notes first');
+          return;
+        }
+        try {
+          const prompt = `Based on these notes about "${book.title}" by ${book.author}, generate 5-7 key ideas as concise numbered insights, each 1-2 sentences. Return ONLY a JSON array of strings. Notes: ${notesContent}`;
+          const result = await callClaude(apiKey, prompt);
+          const ideas = JSON.parse(result);
+          onUpdate({ ...book, keyIdeas: ideas });
+          setToast('Ideas generated');
+        } catch (e) {
+          setToast('Failed to generate ideas');
+        }
+      };
+
+      const handleToolbarCmd = (cmd, val = null) => {
+        if (editorRef.current) {
+          editorRef.current.focus();
+          document.execCommand(cmd, false, val);
+        }
+      };
+
+      const handleScanText = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file || !apiKey) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          const base64 = ev.target?.result?.split(',')[1];
+          if (!base64) return;
+          try {
+            const text = await callClaude(apiKey, 'Extract all text from this image exactly as written.', base64);
+            if (editorRef.current) {
+              editorRef.current.focus();
+              document.execCommand('insertText', false, text + ' ');
+            }
+          } catch (err) {
+            setToast('Scan failed');
+          }
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const handlePaste = async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (editorRef.current) {
+            editorRef.current.focus();
+            document.execCommand('insertText', false, text);
+          }
+        } catch {
+          setToast('Paste failed');
+        }
+      };
+
+      const handlePolishText = async () => {
+        if (!apiKey || !editorRef.current) return;
+        const content = editorRef.current.innerHTML;
+        try {
+          const result = await callClaude(apiKey, `Polish and improve this text, keeping the original meaning. Return clean HTML with bold/italic/ul/ol/p formatting: ${content}`);
+          setNotesContent(result);
+          if (editorRef.current) {
+            editorRef.current.innerHTML = result;
+          }
+        } catch {
+          setToast('Polish failed');
+        }
+      };
+
+      return (
+        <>
+          <button className="detail-back-btn" onClick={onBack}>←</button>
+
+          <div className="detail-header">
+            <div className="detail-hero">
+              <img
+                src={driveImg(book.imageId)}
+                alt={book.title}
+                className="detail-hero-image"
+              />
+              <div className="detail-hero-text">
+                <div className="detail-title">{book.title}</div>
+                <div className="detail-author">{book.author}</div>
+                <div className="detail-genre-tag">{genre?.label}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="detail-tabs">
+            <button
+              className={`tab ${activeTab === 'ideas' ? 'active' : ''}`}
+              onClick={() => setActiveTab('ideas')}
+            >
+              Key Ideas
+            </button>
+            <button
+              className={`tab ${activeTab === 'notes' ? 'active' : ''}`}
+              onClick={() => setActiveTab('notes')}
+            >
+              My Notes
+            </button>
+          </div>
+
+          <div className="screen-content">
+            {activeTab === 'ideas' && (
+              <div className="tab-content">
+                {book.keyIdeas.length > 0 ? (
+                  <>
+                    {book.keyIdeas.map((idea, i) => (
+                      <div key={i} className="card">
+                        <strong>{i + 1}.</strong> {idea}
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="empty-state">
+                    <div className="empty-state-icon">✦</div>
+                    <p>No key ideas yet</p>
+                  </div>
+                )}
+
+                {book.summaryId && (
+                  <a href={drivePdf(book.summaryId)} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ display: 'block', textAlign: 'center', marginTop: '16px', textDecoration: 'none' }}>
+                    Open Summary PDF
+                  </a>
+                )}
+
+                {apiKey && (
+                  <button className="btn btn-primary" onClick={handleGenerateIdeas} style={{ width: '100%', marginTop: '16px' }}>
+                    ✦ Generate Key Ideas
+                  </button>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'notes' && !isEditingNotes && (
+              <div className="tab-content">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <strong>My Notes</strong>
+                  <button className="btn btn-primary btn-sm" onClick={() => { setIsEditingNotes(true); setNotesContent(book.notes); }}>
+                    Edit
+                  </button>
+                </div>
+                {book.notes ? (
+                  <div dangerouslySetInnerHTML={{ __html: book.notes }} style={{ fontSize: '15px', lineHeight: '1.6' }} />
+                ) : (
+                  <div style={{ fontStyle: 'italic', color: '#6B7280' }}>No notes yet — tap Edit to start writing</div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'notes' && isEditingNotes && (
+              <>
+                <div className="editor-toolbar">
+                  <button className="toolbar-btn" onClick={() => handleToolbarCmd('bold')} title="Bold">
+                    B
+                  </button>
+                  <button className="toolbar-btn" onClick={() => handleToolbarCmd('italic')} title="Italic">
+                    I
+                  </button>
+                  <button className="toolbar-btn" onClick={() => handleToolbarCmd('insertUnorderedList')} title="Bullet">
+                    ≡
+                  </button>
+                  <button className="toolbar-btn" onClick={() => handleToolbarCmd('insertOrderedList')} title="Numbered">
+                    1.
+                  </button>
+                  <button className="toolbar-btn" onClick={() => handleToolbarCmd('formatBlock', '<p>')} title="Paragraph">
+                    ¶
+                  </button>
+                  <div className="toolbar-divider" />
+                  <button className="toolbar-btn" onClick={() => scanRef.current?.click()} title="Scan">
+                    📷
+                  </button>
+                  <button className="toolbar-btn" onClick={handlePaste} title="Paste">
+                    📋
+                  </button>
+                  {apiKey && (
+                    <button className="toolbar-btn" onClick={handlePolishText} title="AI Polish">
+                      ✦
+                    </button>
+                  )}
+                  <div style={{ flex: 1 }} />
+                  <button className="btn btn-secondary btn-sm" onClick={() => setIsEditingNotes(false)}>
+                    Cancel
+                  </button>
+                  <button className="btn btn-primary btn-sm" onClick={handleSaveNotes}>
+                    Save
+                  </button>
+                </div>
+                <div
+                  ref={editorRef}
+                  className="contenteditable"
+                  contentEditable
+                  suppressContentEditableWarning
+                  onInput={(e) => setNotesContent(e.currentTarget.innerHTML)}
+                  dangerouslySetInnerHTML={{ __html: notesContent }}
+                  style={{ minHeight: '400px', flex: 1 }}
+                />
+                <input
+                  ref={scanRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleScanText}
+                  style={{ display: 'none' }}
+                />
+              </>
+            )}
+          </div>
+
+          {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+        </>
+      );
+    }
+
+    // ============================================================================
+    // PODCASTS SCREEN
+    // ============================================================================
+
+    function PodcastsScreen({ podcasts, genres, onSelectPodcast, onNavigate }) {
+      const [search, setSearch] = useState('');
+      const [selectedGenre, setSelectedGenre] = useState('all');
+
+      const filtered = podcasts.filter(p => {
+        const matchSearch = !search || p.title.toLowerCase().includes(search.toLowerCase());
+        const matchGenre = selectedGenre === 'all' || p.topic === selectedGenre;
+        return matchSearch && matchGenre;
+      });
+
+      const sorted = [...filtered].sort((a, b) => b.addedAt - a.addedAt);
+
+      return (
+        <>
+          <div className="header">
+            <div className="header-left">
+              <LogoSVG size={28} />
+              <span className="header-title blue">PODSUM</span>
+            </div>
+            <button className="btn btn-primary btn-sm" onClick={() => onNavigate('add')}>+</button>
+          </div>
+
+          <div className="screen-content">
+            <div className="search-bar">
+              <input
+                className="search-input"
+                type="text"
+                placeholder="Search podcasts..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                inputMode="search"
+              />
+            </div>
+
+            <div className="genre-dropdown">
+              <select
+                className="genre-select"
+                value={selectedGenre}
+                onChange={(e) => setSelectedGenre(e.target.value)}
+              >
+                <option value="all">All Topics</option>
+                {genres.map(g => (
+                  <option key={g.id} value={g.id}>{g.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {sorted.length > 0 && (
+              <div className="section-label">Recently Summarized</div>
+            )}
+
+            {sorted.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">🎧</div>
+                <p>No podcasts yet. Add one to get started!</p>
+              </div>
+            ) : (
+              <div className="book-grid">
+                {sorted.map(p => {
+                  const bg = genres.find(g => g.id === p.topic);
+                  return (
+                    <div key={p.id} className="book-card" onClick={() => onSelectPodcast(p)}>
+                      <div className="book-card-image" style={{ background: bg?.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
+                        🎧
+                      </div>
+                      <div className="book-card-content">
+                        <div className="book-card-title">{p.title.substring(0, 50)}</div>
+                        <div className="book-card-author">{p.host}</div>
+                        <div className="genre-tag" style={{ backgroundColor: bg?.color, color: bg?.text }}>
+                          {bg?.label.replace(/[🧠🔬❤️📜💭💼🚀📖💰💻🌱]/g, '').trim()}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
+      );
+    }
+
+    // ============================================================================
+    // PODCAST DETAIL SCREEN
+    // ============================================================================
+
+    function PodcastDetailScreen({ podcast, genres, onBack, onUpdate, apiKey }) {
+      const [activeTab, setActiveTab] = useState('ideas');
+      const [isEditingNotes, setIsEditingNotes] = useState(false);
+      const [notesContent, setNotesContent] = useState(podcast.notes);
+      const [toast, setToast] = useState(null);
+      const editorRef = useRef(null);
+      const scanRef = useRef(null);
+
+      const topic = genres.find(g => g.id === podcast.topic);
+
+      const handleSaveNotes = () => {
+        onUpdate({ ...podcast, notes: notesContent });
+        setIsEditingNotes(false);
+        setToast('Notes saved');
+      };
+
+      const handleToolbarCmd = (cmd, val = null) => {
+        if (editorRef.current) {
+          editorRef.current.focus();
+          document.execCommand(cmd, false, val);
+        }
+      };
+
+      const handleScanText = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file || !apiKey) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          const base64 = ev.target?.result?.split(',')[1];
+          if (!base64) return;
+          try {
+            const text = await callClaude(apiKey, 'Extract all text from this image exactly as written.', base64);
+            if (editorRef.current) {
+              editorRef.current.focus();
+              document.execCommand('insertText', false, text + ' ');
+            }
+          } catch {
+            setToast('Scan failed');
+          }
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const handlePaste = async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (editorRef.current) {
+            editorRef.current.focus();
+            document.execCommand('insertText', false, text);
+          }
+        } catch {
+          setToast('Paste failed');
+        }
+      };
+
+      const handlePolishText = async () => {
+        if (!apiKey || !editorRef.current) return;
+        const content = editorRef.current.innerHTML;
+        try {
+          const result = await callClaude(apiKey, `Polish and improve this text, keeping the original meaning. Return clean HTML: ${content}`);
+          setNotesContent(result);
+          if (editorRef.current) {
+            editorRef.current.innerHTML = result;
+          }
+        } catch {
+          setToast('Polish failed');
+        }
+      };
+
+      return (
+        <>
+          <button className="detail-back-btn" onClick={onBack}>←</button>
+
+          <div className="detail-header">
+            <div className="detail-hero">
+              <div className="detail-hero-image" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '64px', background: topic?.color }}>
+                🎧
+              </div>
+              <div className="detail-hero-text">
+                <div className="detail-title">{podcast.title}</div>
+                <div className="detail-author">{podcast.host}</div>
+                <div className="detail-genre-tag">{topic?.label}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="detail-tabs">
+            <button
+              className={`tab ${activeTab === 'ideas' ? 'active' : ''}`}
+              onClick={() => setActiveTab('ideas')}
+            >
+              Key Ideas
+            </button>
+            <button
+              className={`tab ${activeTab === 'notes' ? 'active' : ''}`}
+              onClick={() => setActiveTab('notes')}
+            >
+              My Notes
+            </button>
+          </div>
+
+          <div className="screen-content">
+            {activeTab === 'ideas' && (
+              <div className="tab-content">
+                {podcast.keyIdeas.length > 0 ? (
+                  <>
+                    {podcast.keyIdeas.map((idea, i) => (
+                      <div key={i} className="card">
+                        <strong>{i + 1}.</strong> {idea}
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="empty-state">
+                    <div className="empty-state-icon">✦</div>
+                    <p>No key ideas yet</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'notes' && !isEditingNotes && (
+              <div className="tab-content">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <strong>My Notes</strong>
+                  <button className="btn btn-primary btn-sm" onClick={() => { setIsEditingNotes(true); setNotesContent(podcast.notes); }}>
+                    Edit
+                  </button>
+                </div>
+                {podcast.notes ? (
+                  <div dangerouslySetInnerHTML={{ __html: podcast.notes }} style={{ fontSize: '15px', lineHeight: '1.6' }} />
+                ) : (
+                  <div style={{ fontStyle: 'italic', color: '#6B7280' }}>No notes yet — tap Edit to start writing</div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'notes' && isEditingNotes && (
+              <>
+                <div className="editor-toolbar">
+                  <button className="toolbar-btn" onClick={() => handleToolbarCmd('bold')} title="Bold">
+                    B
+                  </button>
+                  <button className="toolbar-btn" onClick={() => handleToolbarCmd('italic')} title="Italic">
+                    I
+                  </button>
+                  <button className="toolbar-btn" onClick={() => handleToolbarCmd('insertUnorderedList')} title="Bullet">
+                    ≡
+                  </button>
+                  <button className="toolbar-btn" onClick={() => handleToolbarCmd('insertOrderedList')} title="Numbered">
+                    1.
+                  </button>
+                  <button className="toolbar-btn" onClick={() => handleToolbarCmd('formatBlock', '<p>')} title="Paragraph">
+                    ¶
+                  </button>
+                  <div className="toolbar-divider" />
+                  <button className="toolbar-btn" onClick={() => scanRef.current?.click()} title="Scan">
+                    📷
+                  </button>
+                  <button className="toolbar-btn" onClick={handlePaste} title="Paste">
+                    📋
+                  </button>
+                  {apiKey && (
+                    <button className="toolbar-btn" onClick={handlePolishText} title="AI Polish">
+                      ✦
+                    </button>
+                  )}
+                  <div style={{ flex: 1 }} />
+                  <button className="btn btn-secondary btn-sm" onClick={() => setIsEditingNotes(false)}>
+                    Cancel
+                  </button>
+                  <button className="btn btn-primary btn-sm" onClick={handleSaveNotes}>
+                    Save
+                  </button>
+                </div>
+                <div
+                  ref={editorRef}
+                  className="contenteditable"
+                  contentEditable
+                  suppressContentEditableWarning
+                  onInput={(e) => setNotesContent(e.currentTarget.innerHTML)}
+                  dangerouslySetInnerHTML={{ __html: notesContent }}
+                  style={{ minHeight: '400px', flex: 1 }}
+                />
+                <input
+                  ref={scanRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleScanText}
+                  style={{ display: 'none' }}
+                />
+              </>
+            )}
+          </div>
+
+          {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+        </>
+      );
+    }
+
+    // ============================================================================
+    // ADD SCREEN
+    // ============================================================================
+
+    function AddScreen({ genres, onAddBook, onAddPodcast, onNavigate }) {
+      const [type, setType] = useState('book');
+      const [title, setTitle] = useState('');
+      const [author, setAuthor] = useState('');
+      const [selectedGenre, setSelectedGenre] = useState(genres[0]?.id || '');
+      const [notes, setNotes] = useState('');
+      const [podcastUrl, setPodcastUrl] = useState('');
+      const [podcastHost, setPodcastHost] = useState('');
+      const [podcastTopic, setPodcastTopic] = useState(genres[0]?.id || '');
+      const [toast, setToast] = useState(null);
+      const [isLoading, setIsLoading] = useState(false);
+
+      const handleAddBook = () => {
+        if (!title || !author) {
+          setToast('Fill in all fields');
+          return;
+        }
+        onAddBook({ title, author, genre: selectedGenre, notes });
+        setToast('Book added');
+        setTitle('');
+        setAuthor('');
+        setNotes('');
+        onNavigate('library');
+      };
+
+      const handleAddPodcast = async () => {
+        if (!podcastUrl || !podcastHost) {
+          setToast('Fill in all fields');
+          return;
+        }
+        onAddPodcast({ url: podcastUrl, title: podcastUrl, host: podcastHost, topic: podcastTopic, notes: '', keyIdeas: [] });
+        setToast('Podcast added');
+        setPodcastUrl('');
+        setPodcastHost('');
+        onNavigate('podcasts');
+      };
+
+      return (
+        <>
+          <div className="header">
+            <button className="btn btn-secondary btn-sm" onClick={() => onNavigate('library')}>← Back</button>
+            <span className="header-title">Add</span>
+            <div style={{ width: '36px' }} />
+          </div>
+
+          <div className="screen-content">
+            <div style={{ padding: '16px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+              <div className="toggle-btn">
+                <button
+                  className={`toggle-btn-item ${type === 'book' ? 'active' : ''}`}
+                  onClick={() => setType('book')}
+                >
+                  📚 Book
+                </button>
+                <button
+                  className={`toggle-btn-item ${type === 'podcast' ? 'active' : ''}`}
+                  onClick={() => setType('podcast')}
+                >
+                  🎧 Podcast
+                </button>
+              </div>
+            </div>
+
+            {type === 'book' && (
+              <div style={{ padding: '0 16px 16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Title</label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Book title"
+                    inputMode="text"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Author</label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    value={author}
+                    onChange={(e) => setAuthor(e.target.value)}
+                    placeholder="Author name"
+                    inputMode="text"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Genre</label>
+                  <select
+                    className="form-input"
+                    value={selectedGenre}
+                    onChange={(e) => setSelectedGenre(e.target.value)}
+                  >
+                    {genres.map(g => (
+                      <option key={g.id} value={g.id}>{g.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Notes (Optional)</label>
+                  <textarea
+                    className="form-input"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add notes about this book..."
+                    rows="6"
+                  />
+                </div>
+                <button className="btn btn-primary" onClick={handleAddBook} style={{ width: '100%', marginTop: '16px' }}>
+                  Save to Library
+                </button>
+              </div>
+            )}
+
+            {type === 'podcast' && (
+              <div style={{ padding: '0 16px 16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Podcast URL</label>
+                  <input
+                    className="form-input"
+                    type="url"
+                    value={podcastUrl}
+                    onChange={(e) => setPodcastUrl(e.target.value)}
+                    placeholder="https://..."
+                    inputMode="url"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Host/Show</label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    value={podcastHost}
+                    onChange={(e) => setPodcastHost(e.target.value)}
+                    placeholder="Host or show name"
+                    inputMode="text"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Topic</label>
+                  <select
+                    className="form-input"
+                    value={podcastTopic}
+                    onChange={(e) => setPodcastTopic(e.target.value)}
+                  >
+                    {genres.map(g => (
+                      <option key={g.id} value={g.id}>{g.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleAddPodcast}
+                  style={{ width: '100%', marginTop: '16px' }}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Adding...' : '✦ Summarize & Save'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+        </>
+      );
+    }
+
+    // ============================================================================
+    // SETTINGS SCREEN
+    // ============================================================================
+
+    function SettingsScreen({
+      apiKey, onSetApiKey,
+      googleClientId, onSetGoogleClientId,
+      driveConnected, driveEmail, driveSyncing, driveLastSync, driveError,
+      onConnectDrive, onDisconnectDrive, onSyncNow,
+      onNavigate
+    }) {
+      const [showApiModal, setShowApiModal] = useState(false);
+      const [showDriveModal, setShowDriveModal] = useState(false);
+      const [showDriveHelp, setShowDriveHelp] = useState(false);
+      const [tempApiKey, setTempApiKey] = useState(apiKey);
+      const [tempClientId, setTempClientId] = useState(googleClientId);
+
+      const handleSaveApiKey = () => { onSetApiKey(tempApiKey); setShowApiModal(false); };
+      const handleSaveClientId = () => { onSetGoogleClientId(tempClientId); setShowDriveModal(false); };
+
+      const isFileBased = typeof window !== 'undefined' && window.location.protocol === 'file:';
+
+      const formatSync = (iso) => {
+        if (!iso) return 'Never synced';
+        const diff = Math.round((Date.now() - new Date(iso)) / 60000);
+        if (diff < 1) return 'Just now';
+        if (diff < 60) return `${diff}m ago`;
+        if (diff < 1440) return `${Math.round(diff/60)}h ago`;
+        return new Date(iso).toLocaleDateString();
+      };
+
+      return (
+        <>
+          <div className="header">
+            <span className="header-title">Settings</span>
+            <div style={{ width: '36px' }} />
+          </div>
+
+          <div className="screen-content">
+            <div style={{ padding: '16px' }}>
+
+              {/* ── Google Drive Sync Card ──────────────────────────── */}
+              <div style={{ fontSize: '11px', fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', marginTop: '4px' }}>
+                Cloud Sync
+              </div>
+
+              <div className="card" style={{ marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: driveConnected ? '10px' : '0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '20px' }}>☁️</span>
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '14px' }}>Google Drive</div>
+                      {driveConnected
+                        ? <div style={{ fontSize: '12px', color: '#10B981' }}>● Connected · {driveEmail || ''}</div>
+                        : <div style={{ fontSize: '12px', color: '#6B7280' }}>○ Not connected</div>
+                      }
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowDriveModal(true)}
+                    style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#6B7280', padding: '4px' }}
+                  >✎</button>
+                </div>
+
+                {isFileBased && (
+                  <div style={{ background: '#FEF3C7', borderRadius: '8px', padding: '10px', fontSize: '12px', color: '#92400E', marginBottom: '10px' }}>
+                    ⚠️ Drive sync requires the app to be hosted online (not opened as a local file). See the help below for an easy free hosting option.
+                  </div>
+                )}
+
+                {driveError && (
+                  <div style={{ background: '#FEE2E2', borderRadius: '8px', padding: '10px', fontSize: '12px', color: '#991B1B', marginBottom: '10px' }}>
+                    ✗ {driveError}
+                  </div>
+                )}
+
+                {driveConnected ? (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ fontSize: '12px', color: '#6B7280', flex: 1 }}>
+                      {driveSyncing ? '⟳ Syncing…' : `Last sync: ${formatSync(driveLastSync)}`}
+                    </div>
+                    <button
+                      onClick={onSyncNow}
+                      disabled={driveSyncing}
+                      style={{ fontSize: '12px', background: '#EFF6FF', color: '#3B82F6', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer' }}
+                    >
+                      Sync now
+                    </button>
+                    <button
+                      onClick={onDisconnectDrive}
+                      style={{ fontSize: '12px', background: '#FEE2E2', color: '#EF4444', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer' }}
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={onConnectDrive}
+                      style={{ flex: 1, padding: '8px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer' }}
+                    >
+                      Connect Google Drive
+                    </button>
+                    <button
+                      onClick={() => setShowDriveHelp(!showDriveHelp)}
+                      style={{ fontSize: '12px', background: '#F5EDD8', color: '#6B7280', border: 'none', borderRadius: '6px', padding: '6px 10px', cursor: 'pointer' }}
+                    >
+                      {showDriveHelp ? 'Hide help' : 'How to set up'}
+                    </button>
+                  </div>
+                )}
+
+                {showDriveHelp && (
+                  <div style={{ marginTop: '12px', background: '#F9FAFB', borderRadius: '8px', padding: '12px', fontSize: '12px', lineHeight: '1.6', color: '#374151' }}>
+                    <div style={{ fontWeight: '700', marginBottom: '6px' }}>One-time setup (5 minutes):</div>
+                    <div>1. Host this HTML file for free on <strong>GitHub Pages</strong> (or Netlify / Cloudflare Pages).</div>
+                    <div style={{ marginTop: '4px' }}>2. Go to <strong>console.cloud.google.com</strong> → New Project → Enable <em>Google Drive API</em>.</div>
+                    <div style={{ marginTop: '4px' }}>3. Create credentials → <em>OAuth 2.0 Client ID</em> → Web Application.</div>
+                    <div style={{ marginTop: '4px' }}>4. Add your hosted URL as an <em>Authorized JavaScript Origin</em>.</div>
+                    <div style={{ marginTop: '4px' }}>5. Copy the Client ID, paste it here (tap ✎ above), then tap "Connect Google Drive".</div>
+                    <div style={{ marginTop: '8px', color: '#3B82F6', fontWeight: '600' }}>
+                      After connecting, your entire library auto-saves to BOOKSUM_data.json in your Google Drive.
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Other Settings ────────────────────────────────────── */}
+              <div style={{ fontSize: '11px', fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', marginTop: '16px' }}>
+                App
+              </div>
+
+              <div className="card" onClick={() => onNavigate('statistics')}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>📊 Statistics</span>
+                  <span>›</span>
+                </div>
+              </div>
+
+              <div className="card" onClick={() => setShowApiModal(true)}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>🔑 Claude API Key</span>
+                  <span style={{ color: apiKey ? '#10B981' : '#EF4444' }}>{apiKey ? '✓ Set' : '✗ Not set'}</span>
+                </div>
+              </div>
+
+              <div className="card" onClick={() => onNavigate('genres')}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>🏷️ Manage Genres</span>
+                  <span>›</span>
+                </div>
+              </div>
+
+              <div className="card">
+                <div>✨ BOOKSUM v2</div>
+                <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
+                  Your personal book & podcast companion with AI
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Claude API Key Modal */}
+          {showApiModal && (
+            <div className="modal-overlay" onClick={() => setShowApiModal(false)}>
+              <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2 className="modal-title">Claude API Key</h2>
+                  <button className="close-btn" onClick={() => setShowApiModal(false)}>×</button>
+                </div>
+                <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '10px' }}>
+                  Get your key at console.anthropic.com → API Keys
+                </div>
+                <input
+                  className="form-input"
+                  type="password"
+                  value={tempApiKey}
+                  onChange={(e) => setTempApiKey(e.target.value)}
+                  placeholder="sk-ant-..."
+                  inputMode="text"
+                />
+                <button className="btn btn-primary" onClick={handleSaveApiKey} style={{ width: '100%', marginTop: '16px' }}>
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Google Client ID Modal */}
+          {showDriveModal && (
+            <div className="modal-overlay" onClick={() => setShowDriveModal(false)}>
+              <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2 className="modal-title">Google OAuth Client ID</h2>
+                  <button className="close-btn" onClick={() => setShowDriveModal(false)}>×</button>
+                </div>
+                <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '10px' }}>
+                  From Google Cloud Console → Credentials → OAuth 2.0 Client ID (Web App)
+                </div>
+                <input
+                  className="form-input"
+                  type="text"
+                  value={tempClientId}
+                  onChange={(e) => setTempClientId(e.target.value)}
+                  placeholder="123456789-abc.apps.googleusercontent.com"
+                  inputMode="text"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                />
+                <button className="btn btn-primary" onClick={handleSaveClientId} style={{ width: '100%', marginTop: '16px' }}>
+                  Save Client ID
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    // ============================================================================
+    // STATISTICS SCREEN
+    // ============================================================================
+
+    function StatisticsScreen({ books, podcasts, genres, onBack, apiKey }) {
+      const [toast, setToast] = useState(null);
+
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth();
+
+      const totalBooks = books.length;
+      const totalPodcasts = podcasts.length;
+      const thisYearBooks = books.filter(b => new Date(b.addedAt).getFullYear() === currentYear).length;
+      const thisMonthBooks = books.filter(b => {
+        const d = new Date(b.addedAt);
+        return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+      }).length;
+
+      const genreCounts = genres.map(g => ({
+        ...g,
+        count: books.filter(b => b.genre === g.id).length
+      })).sort((a, b) => b.count - a.count);
+
+      const topGenre = genreCounts[0]?.label || 'N/A';
+
+      return (
+        <>
+          <button className="detail-back-btn" onClick={onBack}>←</button>
+          <div className="header" style={{ paddingTop: '50px' }}>
+            <span className="header-title">Statistics</span>
+            <div style={{ width: '36px' }} />
+          </div>
+
+          <div className="screen-content">
+            <div className="stat-pills">
+              <div className="stat-pill">
+                <div className="stat-value">{totalBooks}</div>
+                <div className="stat-label">Total Books</div>
+              </div>
+              <div className="stat-pill">
+                <div className="stat-value">{totalPodcasts}</div>
+                <div className="stat-label">Podcasts</div>
+              </div>
+              <div className="stat-pill">
+                <div className="stat-value">{thisYearBooks}</div>
+                <div className="stat-label">This Year</div>
+              </div>
+            </div>
+
+            <div className="stat-pills">
+              <div className="stat-pill">
+                <div className="stat-value">{thisMonthBooks}</div>
+                <div className="stat-label">This Month</div>
+              </div>
+              <div className="stat-pill">
+                <div className="stat-value">{totalBooks > 0 ? Math.round(totalBooks / 12) : 0}</div>
+                <div className="stat-label">Avg/Month</div>
+              </div>
+              <div className="stat-pill">
+                <div className="stat-value" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>
+                  {topGenre.replace(/[🧠🔬❤️📜💭💼🚀📖💰💻🌱]/g, '').trim()}
+                </div>
+                <div className="stat-label">Top Genre</div>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px' }}>
+              <div className="section-label">Genre Breakdown</div>
+              {genreCounts.map(g => (
+                <div key={g.id} style={{ marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px' }}>
+                    <span>{g.label}</span>
+                    <span>{g.count}</span>
+                  </div>
+                  <div style={{ height: '6px', background: '#E5E5E5', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        background: g.text,
+                        width: `${totalBooks > 0 ? (g.count / totalBooks) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+        </>
+      );
+    }
+
+    // ============================================================================
+    // MANAGE GENRES SCREEN
+    // ============================================================================
+
+    function ManageGenresScreen({ genres, books, onUpdateGenres, onBack }) {
+      const [showAddModal, setShowAddModal] = useState(false);
+      const [newGenreName, setNewGenreName] = useState('');
+      const [newGenreColor, setNewGenreColor] = useState('#EFF6FF');
+
+      const genresWithCounts = genres.map(g => ({
+        ...g,
+        count: books.filter(b => b.genre === g.id).length
+      }));
+
+      const handleAddGenre = () => {
+        if (!newGenreName) return;
+        const newId = newGenreName.toLowerCase().replace(/\s+/g, '_');
+        onUpdateGenres([...genres, { id: newId, label: newGenreName, color: newGenreColor, text: '#1C1C1E' }]);
+        setNewGenreName('');
+        setShowAddModal(false);
+      };
+
+      return (
+        <>
+          <button className="detail-back-btn" onClick={onBack}>←</button>
+          <div className="header" style={{ paddingTop: '50px' }}>
+            <span className="header-title">Genres</span>
+            <button className="btn btn-primary btn-sm" onClick={() => setShowAddModal(true)}>+</button>
+          </div>
+
+          <div className="screen-content">
+            <div style={{ padding: '16px' }}>
+              {genresWithCounts.map(g => (
+                <div key={g.id} className="card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div>{g.label}</div>
+                      <div style={{ fontSize: '12px', color: '#6B7280' }}>{g.count} books</div>
+                    </div>
+                    <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: g.color, border: '1px solid #E5E5E5' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {showAddModal && (
+            <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+              <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2 className="modal-title">Add Genre</h2>
+                  <button className="close-btn" onClick={() => setShowAddModal(false)}>×</button>
+                </div>
+                <input
+                  className="form-input"
+                  type="text"
+                  value={newGenreName}
+                  onChange={(e) => setNewGenreName(e.target.value)}
+                  placeholder="Genre name"
+                  inputMode="text"
+                />
+                <div style={{ marginTop: '12px', marginBottom: '12px' }}>
+                  <label className="form-label">Color</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                    {['#EFF6FF', '#ECFDF5', '#FEF9C3', '#FEE2E2', '#F3E8FF', '#FEF3C7', '#DBEAFE', '#FCE7F3', '#E0F2FE', '#F1F5F9', '#DCFCE7'].map(c => (
+                      <button
+                        key={c}
+                        onClick={() => setNewGenreColor(c)}
+                        style={{
+                          width: '100%',
+                          height: '40px',
+                          background: c,
+                          border: newGenreColor === c ? '3px solid #3B82F6' : '1px solid #E5E5E5',
+                          borderRadius: '8px',
+                          cursor: 'pointer'
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <button className="btn btn-primary" onClick={handleAddGenre} style={{ width: '100%' }}>
+                  Add Genre
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    // ============================================================================
+    // MAIN APP
+    // ============================================================================
+
+    function App() {
+      const [currentScreen, setCurrentScreen] = useState('library');
+      const [selectedBook, setSelectedBook] = useState(null);
+      const [selectedPodcast, setSelectedPodcast] = useState(null);
+
+      const [books, setBooks] = useLocalStorage('booksum_v2_books', SEED_BOOKS);
+      const [podcasts, setPodcasts] = useLocalStorage('booksum_v2_podcasts', []);
+      const [genres, setGenres] = useLocalStorage('booksum_v2_genres', DEFAULT_GENRES);
+      const [settings, setSettings] = useLocalStorage('booksum_v2_settings', { apiKey: '', language: 'en' });
+
+      const handleAddBook = (bookData) => {
+        const newBook = {
+          id: Math.max(0, ...books.map(b => b.id)) + 1,
+          genre: bookData.genre,
+          title: bookData.title,
+          author: bookData.author,
+          imageId: '',
+          summaryId: '',
+          notes: bookData.notes,
+          keyIdeas: [],
+          addedAt: Date.now()
+        };
+        setBooks([...books, newBook]);
+      };
+
+      const handleAddPodcast = (podcastData) => {
+        const newPodcast = {
+          id: Math.max(0, ...podcasts.map(p => p.id)) + 1,
+          title: podcastData.title,
+          host: podcastData.host,
+          topic: podcastData.topic,
+          url: podcastData.url,
+          notes: podcastData.notes || '',
+          keyIdeas: podcastData.keyIdeas || [],
+          addedAt: Date.now()
+        };
+        setPodcasts([...podcasts, newPodcast]);
+      };
+
+      const handleUpdateBook = (updatedBook) => {
+        setBooks(books.map(b => b.id === updatedBook.id ? updatedBook : b));
+      };
+
+      const handleUpdatePodcast = (updatedPodcast) => {
+        setPodcasts(podcasts.map(p => p.id === updatedPodcast.id ? updatedPodcast : p));
+      };
+
+      const handleSetApiKey = (key) => {
+        setSettings({ ...settings, apiKey: key });
+      };
+
+      const handleSetGoogleClientId = (id) => {
+        setSettings({ ...settings, googleClientId: id.trim() });
+      };
+
+      // ── Google Drive sync state ──────────────────────────────────────────────
+      const [driveToken, setDriveToken] = useState(null);
+      const [driveFileId, setDriveFileId] = useState(() => {
+        try { return localStorage.getItem('booksum_drive_fid') || null; } catch { return null; }
+      });
+      const [driveConnected, setDriveConnected] = useState(false);
+      const [driveSyncing, setDriveSyncing] = useState(false);
+      const [driveLastSync, setDriveLastSync] = useState(() => {
+        try { return localStorage.getItem('booksum_drive_sync') || null; } catch { return null; }
+      });
+      const [driveError, setDriveError] = useState(null);
+      const [driveEmail, setDriveEmail] = useState(() => {
+        try { return localStorage.getItem('booksum_drive_email') || null; } catch { return null; }
+      });
+      const syncTimerRef = useRef(null);
+      const tokenClientRef = useRef(null);
+
+      // Persist driveFileId to localStorage whenever it changes
+      useEffect(() => {
+        if (driveFileId) localStorage.setItem('booksum_drive_fid', driveFileId);
+        else localStorage.removeItem('booksum_drive_fid');
+      }, [driveFileId]);
+
+      // Build / rebuild the GIS token client when clientId is set
+      const buildTokenClient = useCallback((clientId) => {
+        if (!clientId || !window.google?.accounts?.oauth2) return null;
+        return window.google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: DRIVE_SCOPE,
+          callback: async (resp) => {
+            if (resp.error) {
+              setDriveError(resp.error_description || resp.error);
+              return;
+            }
+            const tok = resp.access_token;
+            setDriveToken(tok);
+            setDriveConnected(true);
+            setDriveError(null);
+            // Fetch user email
+            try {
+              const u = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${tok}` }
+              }).then(r => r.json());
+              const email = u.email || '';
+              setDriveEmail(email);
+              localStorage.setItem('booksum_drive_email', email);
+            } catch {}
+            // Load data from Drive on first connect
+            await loadFromDriveWithToken(tok);
+          }
+        });
+      }, []);
+
+      const connectDrive = () => {
+        if (!settings.googleClientId) {
+          setDriveError('Please enter your Google Client ID first (tap the pencil icon).');
+          return;
+        }
+        if (!window.google?.accounts?.oauth2) {
+          setDriveError('Google library not loaded — check your internet connection.');
+          return;
+        }
+        if (!tokenClientRef.current) {
+          tokenClientRef.current = buildTokenClient(settings.googleClientId);
+        }
+        tokenClientRef.current?.requestAccessToken();
+      };
+
+      const disconnectDrive = () => {
+        if (driveToken && window.google?.accounts?.oauth2) {
+          try { window.google.accounts.oauth2.revoke(driveToken, () => {}); } catch {}
+        }
+        setDriveToken(null);
+        setDriveConnected(false);
+        setDriveFileId(null);
+        setDriveEmail(null);
+        setDriveError(null);
+        localStorage.removeItem('booksum_drive_fid');
+        localStorage.removeItem('booksum_drive_email');
+        localStorage.removeItem('booksum_drive_sync');
+      };
+
+      // saveToDrive — takes live state values as args so it can be called from effects
+      const saveToDriveWithToken = useCallback(async (tok, bks, pods, gnrs, fid) => {
+        if (!tok) return;
+        setDriveSyncing(true);
+        setDriveError(null);
+        try {
+          const payload = JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), books: bks, podcasts: pods, genres: gnrs }, null, 2);
+          let resolvedFid = fid;
+          if (!resolvedFid) {
+            const existing = await findDriveFile(tok, DRIVE_FILE_NAME);
+            resolvedFid = existing ? existing.id : (await createDriveFile(tok, DRIVE_FILE_NAME, payload)).id;
+            setDriveFileId(resolvedFid);
+          } else {
+            await updateDriveFile(tok, resolvedFid, payload);
+          }
+          const now = new Date().toISOString();
+          setDriveLastSync(now);
+          localStorage.setItem('booksum_drive_sync', now);
+        } catch (e) {
+          setDriveError(e.message);
+        } finally {
+          setDriveSyncing(false);
+        }
+      }, []);
+
+      const loadFromDriveWithToken = useCallback(async (tok) => {
+        if (!tok) return;
+        setDriveSyncing(true);
+        setDriveError(null);
+        try {
+          let fid = driveFileId;
+          if (!fid) {
+            const existing = await findDriveFile(tok, DRIVE_FILE_NAME);
+            if (!existing) { setDriveSyncing(false); return; }
+            fid = existing.id;
+            setDriveFileId(fid);
+          }
+          const data = await readDriveFile(tok, fid);
+          if (data.books) setBooks(data.books);
+          if (data.podcasts) setPodcasts(data.podcasts);
+          if (data.genres) setGenres(data.genres);
+          const now = new Date().toISOString();
+          setDriveLastSync(now);
+          localStorage.setItem('booksum_drive_sync', now);
+        } catch (e) {
+          setDriveError(e.message);
+        } finally {
+          setDriveSyncing(false);
+        }
+      }, [driveFileId]);
+
+      // Auto-sync 3 s after data changes (debounced)
+      useEffect(() => {
+        if (!driveConnected || !driveToken) return;
+        if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+        syncTimerRef.current = setTimeout(() => {
+          saveToDriveWithToken(driveToken, books, podcasts, genres, driveFileId);
+        }, 3000);
+        return () => clearTimeout(syncTimerRef.current);
+      }, [books, podcasts, genres, driveConnected, driveToken]);
+
+      return (
+        <div className="app-container">
+          {currentScreen === 'library' && (
+            <LibraryScreen
+              books={books}
+              genres={genres}
+              onSelectBook={(book) => {
+                setSelectedBook(book);
+                setCurrentScreen('book-detail');
+              }}
+              apiKey={settings.apiKey}
+              onNavigate={setCurrentScreen}
+            />
+          )}
+
+          {currentScreen === 'book-detail' && selectedBook && (
+            <BookDetailScreen
+              book={selectedBook}
+              genres={genres}
+              onBack={() => setCurrentScreen('library')}
+              onUpdate={(updated) => {
+                handleUpdateBook(updated);
+                setSelectedBook(updated);
+              }}
+              apiKey={settings.apiKey}
+            />
+          )}
+
+          {currentScreen === 'podcasts' && (
+            <PodcastsScreen
+              podcasts={podcasts}
+              genres={genres}
+              onSelectPodcast={(podcast) => {
+                setSelectedPodcast(podcast);
+                setCurrentScreen('podcast-detail');
+              }}
+              onNavigate={setCurrentScreen}
+            />
+          )}
+
+          {currentScreen === 'podcast-detail' && selectedPodcast && (
+            <PodcastDetailScreen
+              podcast={selectedPodcast}
+              genres={genres}
+              onBack={() => setCurrentScreen('podcasts')}
+              onUpdate={(updated) => {
+                handleUpdatePodcast(updated);
+                setSelectedPodcast(updated);
+              }}
+              apiKey={settings.apiKey}
+            />
+          )}
+
+          {currentScreen === 'add' && (
+            <AddScreen
+              genres={genres}
+              onAddBook={handleAddBook}
+              onAddPodcast={handleAddPodcast}
+              onNavigate={setCurrentScreen}
+            />
+          )}
+
+          {currentScreen === 'settings' && (
+            <SettingsScreen
+              apiKey={settings.apiKey}
+              onSetApiKey={handleSetApiKey}
+              googleClientId={settings.googleClientId || ''}
+              onSetGoogleClientId={handleSetGoogleClientId}
+              driveConnected={driveConnected}
+              driveEmail={driveEmail}
+              driveSyncing={driveSyncing}
+              driveLastSync={driveLastSync}
+              driveError={driveError}
+              onConnectDrive={connectDrive}
+              onDisconnectDrive={disconnectDrive}
+              onSyncNow={() => saveToDriveWithToken(driveToken, books, podcasts, genres, driveFileId)}
+              onNavigate={setCurrentScreen}
+            />
+          )}
+
+          {currentScreen === 'statistics' && (
+            <StatisticsScreen
+              books={books}
+              podcasts={podcasts}
+              genres={genres}
+              onBack={() => setCurrentScreen('settings')}
+              apiKey={settings.apiKey}
+            />
+          )}
+
+          {currentScreen === 'genres' && (
+            <ManageGenresScreen
+              genres={genres}
+              books={books}
+              onUpdateGenres={setGenres}
+              onBack={() => setCurrentScreen('settings')}
+            />
+          )}
+
+          {/* Bottom Navigation */}
+          <div className="bottom-nav">
+            <div
+              className={`nav-item ${currentScreen === 'library' ? 'active' : ''}`}
+              onClick={() => setCurrentScreen('library')}
+            >
+              <div style={{ fontSize: '20px' }}>📚</div>
+              <div>Library</div>
+            </div>
+            <div
+              className={`nav-item ${currentScreen === 'podcasts' ? 'active' : ''}`}
+              onClick={() => setCurrentScreen('podcasts')}
+            >
+              <div style={{ fontSize: '20px' }}>🎧</div>
+              <div>Podcasts</div>
+            </div>
+            <div
+              className={`nav-item`}
+              onClick={() => setCurrentScreen('add')}
+            >
+              <div style={{ fontSize: '20px' }}>➕</div>
+              <div>Add</div>
+            </div>
+            <div
+              className={`nav-item ${currentScreen === 'settings' ? 'active' : ''}`}
+              onClick={() => setCurrentScreen('settings')}
+            >
+              <div style={{ fontSize: '20px' }}>⚙️</div>
+              <div>Settings</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================================================
+    // RENDER APP
+    // ============================================================================
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
