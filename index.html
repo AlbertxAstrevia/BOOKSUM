@@ -181,20 +181,51 @@
     }
 
     /* Genre Dropdown */
+    /* Section pills */
+    .section-pills {
+      display: flex;
+      gap: 6px;
+      padding: 8px 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .section-pills::-webkit-scrollbar { display: none; }
+    .section-pill {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1.5px solid #E5E5E5;
+      background: var(--white);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .section-pill.active {
+      background: var(--brown);
+      border-color: var(--brown);
+      color: var(--white);
+    }
+
     .genre-dropdown {
-      padding: 0 16px;
+      padding: 0 16px 4px;
       display: flex;
       gap: 8px;
     }
 
     .genre-select {
-      padding: 10px 12px;
+      padding: 9px 12px;
       border: 1px solid #E5E5E5;
       border-radius: 8px;
       font-size: 14px;
       font-family: 'Inter', sans-serif;
       background: var(--white);
       cursor: pointer;
+      flex: 1;
     }
 
     .genre-select:focus {
@@ -687,42 +718,96 @@
     // UTILITIES & CONSTANTS
     // ============================================================================
 
-    const DEFAULT_GENRES = [
-      { id: 'psychology',   label: '🧠 Psychology',         color: '#EFF6FF', text: '#3B82F6' },
-      { id: 'science',      label: '🔬 Science',             color: '#ECFDF5', text: '#059669' },
-      { id: 'health',       label: '❤️ Health & Medicine',   color: '#FEF9C3', text: '#854D0E' },
-      { id: 'history',      label: '📜 History & Society',   color: '#FEE2E2', text: '#991B1B' },
-      { id: 'philosophy',   label: '💭 Philosophy',          color: '#F3E8FF', text: '#7C3AED' },
-      { id: 'business',     label: '💼 Business',            color: '#FEF3C7', text: '#D97706' },
-      { id: 'startups',     label: '🚀 Startups & VC',       color: '#DBEAFE', text: '#1D4ED8' },
-      { id: 'biographies',  label: '📖 Biographies',         color: '#FCE7F3', text: '#9D174D' },
-      { id: 'economics',    label: '💰 Economics',           color: '#E0F2FE', text: '#0369A1' },
-      { id: 'technology',   label: '💻 Technology & AI',     color: '#F1F5F9', text: '#475569' },
-      { id: 'selfdev',      label: '🌱 Self-Development',    color: '#DCFCE7', text: '#166534' },
+    const SECTIONS = [
+      { id: 'all',     label: 'All',       emoji: '📚' },
+      { id: 'Mind & Behaviour',  label: 'Mind',      emoji: '🧠' },
+      { id: 'Science & Nature',  label: 'Science',   emoji: '🔬' },
+      { id: 'Society',           label: 'Society',   emoji: '🌍' },
+      { id: 'Work & Money',      label: 'Work',      emoji: '💼' },
+      { id: 'Skills & Growth',   label: 'Skills',    emoji: '🌱' },
     ];
 
+    const DEFAULT_GENRES = [
+      // — Mind & Behaviour —
+      { id: 'psychology',     label: '🧠 Psychology',                color: '#EFF6FF', text: '#3B82F6',  section: 'Mind & Behaviour' },
+      { id: 'neuroscience',   label: '🧬 Neuroscience',              color: '#E0E7FF', text: '#4338CA',  section: 'Mind & Behaviour' },
+      { id: 'philosophy',     label: '💭 Philosophy',                color: '#F3E8FF', text: '#7C3AED',  section: 'Mind & Behaviour' },
+      { id: 'spirituality',   label: '🙏 Spirituality & Mindfulness',color: '#FDF4FF', text: '#A21CAF',  section: 'Mind & Behaviour' },
+      { id: 'religion',       label: '📿 Religion & Faith',          color: '#FFF7ED', text: '#92400E',  section: 'Mind & Behaviour' },
+      { id: 'relationships',  label: '💑 Relationships',             color: '#FDF2F8', text: '#BE185D',  section: 'Mind & Behaviour' },
+      // — Science & Nature —
+      { id: 'physics',        label: '⚛️ Physics & Cosmology',       color: '#ECFDF5', text: '#065F46',  section: 'Science & Nature' },
+      { id: 'science',        label: '🔬 Biology',                   color: '#D1FAE5', text: '#059669',  section: 'Science & Nature' },
+      { id: 'nature',         label: '🌿 Nature & Environment',      color: '#DCFCE7', text: '#166534',  section: 'Science & Nature' },
+      { id: 'health',         label: '❤️ Health & Medicine',         color: '#FEF9C3', text: '#854D0E',  section: 'Science & Nature' },
+      { id: 'fitness',        label: '🏋️ Fitness & Nutrition',       color: '#FEF3C7', text: '#B45309',  section: 'Science & Nature' },
+      // — Society —
+      { id: 'history',        label: '📜 History',                   color: '#FEE2E2', text: '#991B1B',  section: 'Society' },
+      { id: 'politics',       label: '🌍 Politics & Geopolitics',    color: '#FEF2F2', text: '#B91C1C',  section: 'Society' },
+      { id: 'anthropology',   label: '🌐 Anthropology',              color: '#FFEDD5', text: '#C2410C',  section: 'Society' },
+      // — Work & Money —
+      { id: 'business',       label: '💼 Business & Management',     color: '#FEF3C7', text: '#D97706',  section: 'Work & Money' },
+      { id: 'leadership',     label: '🤝 Leadership',                color: '#FFFBEB', text: '#B45309',  section: 'Work & Money' },
+      { id: 'startups',       label: '🚀 Startups & VC',             color: '#DBEAFE', text: '#1D4ED8',  section: 'Work & Money' },
+      { id: 'economics',      label: '💰 Economics',                 color: '#E0F2FE', text: '#0369A1',  section: 'Work & Money' },
+      { id: 'investing',      label: '💵 Investing & Finance',       color: '#F0F9FF', text: '#0284C7',  section: 'Work & Money' },
+      { id: 'marketing',      label: '📣 Marketing & Sales',         color: '#FFF8DC', text: '#92400E',  section: 'Work & Money' },
+      // — Skills & Growth —
+      { id: 'selfdev',        label: '🌱 Personal Growth',           color: '#F0FDF4', text: '#15803D',  section: 'Skills & Growth' },
+      { id: 'productivity',   label: '📊 Productivity & Systems',    color: '#F8FAFC', text: '#334155',  section: 'Skills & Growth' },
+      { id: 'creativity',     label: '🎨 Creativity & Arts',         color: '#FFF1F2', text: '#BE123C',  section: 'Skills & Growth' },
+      { id: 'technology',     label: '💻 Technology & AI',           color: '#F1F5F9', text: '#475569',  section: 'Skills & Growth' },
+    ];
+
+    // Open Library cover URLs by book ID — used for seeded books and backfill
+    // Verified: covers.openlibrary.org serves real cover images with no auth required
+    const OL = (isbn) => `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
+    const SEED_COVER_URLS = {
+      1:  OL('9780385545747'),  // How to Avoid a Climate Disaster
+      2:  OL('9780804136631'),  // A Spy and a Traitor
+      3:  OL('9780385539302'),  // The Body
+      4:  OL('9781524761417'),  // Blitzscaling
+      5:  OL('9780241974872'),  // A Field Guide to Lies and Statistics
+      6:  OL('9780062464316'),  // Homo Deus
+      7:  OL('9780062316097'),  // Sapiens
+      8:  OL('9780544272996'),  // What If?
+      9:  OL('9780307591548'),  // The Happiness Advantage
+      10: OL('9781501191978'),  // Lifespan
+      11: OL('9781501144325'),  // Why We Sleep
+      12: OL('9780062937650'),  // Influence
+      13: OL('9780307887894'),  // The Lean Startup
+      14: OL('9781982106249'),  // Secrets of Sand Hill Road
+      15: OL('9783442716838'),  // Erkenne die Welt
+      16: OL('9780553383713'),  // Emotional Intelligence
+      17: OL('9780735219564'),  // The Making of a Manager
+      18: OL('9783442718887'),  // Freiheit für alle
+      19: OL('9780062501141'),  // Freedom in Exile
+      20: OL('9783442719297'),  // Von der Pflicht
+      21: OL('9780804139021'),  // Zero to One
+    };
+
     const SEED_BOOKS = [
-      { id:1,  genre:'science',      title:'How to Avoid a Climate Disaster',                                    author:'Bill Gates',           imageId:'1tPCpHXtcsNMOPfPoMDSX7TvKLR6RSFS7', summaryId:'1iLQGdcH-D7rTXiVPcoMCg08spZlgTxAb', notes:'', keyIdeas:[], addedAt:1609459200000 },
-      { id:2,  genre:'biographies',  title:'A Spy and a Traitor',                                               author:'Ben Macintyre',        imageId:'1ZsyPryKfzvjo2W3Zeyj-pWt_ESiHzqFj', summaryId:'1FpzllTG1_O0VDbtp8YTUlE690PjYjohl', notes:'', keyIdeas:[], addedAt:1612137600000 },
-      { id:3,  genre:'health',       title:'The Body: A Guide for Occupants',                                   author:'Bill Bryson',          imageId:'178yf8L1DaoiJj85rugA3JndFrZEVMjYW', summaryId:'1IIwokYk_liyL-VpzOdtqcFPMgZpZsCfz', notes:'', keyIdeas:[], addedAt:1614556800000 },
-      { id:4,  genre:'startups',     title:'Blitzscaling',                                                      author:'Reid Hoffman',         imageId:'1mAN25PROZPN-lKg3Z5lCrZXqV-lunuoW', summaryId:'1GQRg-w31oGBSo_WpRbB4MYb8CwPmiJOI', notes:'', keyIdeas:[], addedAt:1617235200000 },
-      { id:5,  genre:'science',      title:'A Field Guide to Lies and Statistics',                              author:'Daniel Levitin',       imageId:'1XDaAaYILU24k1_Y2cGvJYvCajVIpqUVk', summaryId:'1IndNhz7XMF8x9wInX6ppVNXGmPbgk71h', notes:'', keyIdeas:[], addedAt:1619827200000 },
-      { id:6,  genre:'history',      title:'Homo Deus: A Brief History of Tomorrow',                           author:'Yuval Noah Harari',    imageId:'1dSQBeLemO5NljC17_krZGkQIu7EeHP4b', summaryId:'1I6GyPk_pt0aoiCduIcQ1AnO5Zy_V-4HE', notes:'', keyIdeas:[], addedAt:1622505600000 },
-      { id:7,  genre:'history',      title:'Sapiens: A Brief History of Humankind',                            author:'Yuval Noah Harari',    imageId:'1SzK0LajaoMvJzZ9CXgztysMzuvGrjssB', summaryId:'1IldcM49vg2VviAyRCM2-38-R4YkTBW12', notes:'', keyIdeas:[], addedAt:1625097600000 },
-      { id:8,  genre:'science',      title:'What If?: Serious Scientific Answers to Absurd Hypothetical Questions', author:'Randall Munroe', imageId:'1x5TdmcCGVaXRcobRLLEbLMaW-o8lkBJp', summaryId:'1Gez8oM8Yt0-gO7WSeFM8en198Is3RXh7', notes:'', keyIdeas:[], addedAt:1627776000000 },
-      { id:9,  genre:'psychology',   title:'The Happiness Advantage',                                          author:'Shawn Achor',          imageId:'1lGMSRZD6kZ1Og33g2J1N53Q6sdJd2kF7', summaryId:'1IwCAQk02eBhUU4JIdtst5i1JcJBj2NFN', notes:'', keyIdeas:[], addedAt:1630454400000 },
-      { id:10, genre:'health',       title:"Lifespan: Why We Age — and Why We Don't Have To",                  author:'David A. Sinclair',    imageId:'15orXZ_1oagzzPF9XA-bdSs4uxiD7fFsE', summaryId:'1G9D6lJfHVcEI6YXxB0QHHKcSz72IlFZL', notes:'', keyIdeas:[], addedAt:1633046400000 },
-      { id:11, genre:'health',       title:'Why We Sleep: The New Science of Sleep and Dreams',                author:'Matthew Walker',       imageId:'1UN-VkBo5_06KJTDxh8g1TPXwlNgl6ijJ', summaryId:'1Gx6uN9pVsw0NUrWoQ9aQZEs0LoEK0wUB', notes:'', keyIdeas:[], addedAt:1635724800000 },
-      { id:12, genre:'psychology',   title:'Influence: The Psychology of Persuasion',                          author:'Robert B. Cialdini',   imageId:'1qAoKRFZkz21Xh-vwqDz19ny48zPPf_7z', summaryId:'1GZ3pXxY8LNkJmLmB7oxSt4xGBR3owrMO', notes:'', keyIdeas:[], addedAt:1638316800000 },
-      { id:13, genre:'startups',     title:'The Lean Startup',                                                  author:'Eric Ries',            imageId:'12ZL-oLtACGKkocVphif3YdhisRk4GOaB', summaryId:'1GoQ13RusBG__RALkZZDKTHufNNyPOdxW', notes:'', keyIdeas:[], addedAt:1640995200000 },
-      { id:14, genre:'startups',     title:'Secrets of Sand Hill Road',                                        author:'Scott Kupor',          imageId:'1zPDQ3gPSOnf6Q1ZJ9ab4l88BwcINXfEq', summaryId:'1GjDOSTp2avXSWoWGorG_lMGlnO-Cpb86', notes:'', keyIdeas:[], addedAt:1643673600000 },
-      { id:15, genre:'philosophy',   title:'Erkenne die Welt: Geschichte der Philosophie 1',                  author:'Richard David Precht', imageId:'1s9XX4yg1fCAw_KT3b0vHjsVk9cvNlo03', summaryId:'1cH_SYMO_1nctWGdBPfx8qD7i2KF8Qu80', notes:'', keyIdeas:[], addedAt:1646092800000 },
-      { id:16, genre:'psychology',   title:'Emotional Intelligence',                                            author:'Daniel Goleman',       imageId:'1WjGqvv4pepSITQgZnRnxONs23bMd5Vhe', summaryId:'1TrkrCuW_CX8FNh3s4dVaKfpIWYA6OU94', notes:'', keyIdeas:[], addedAt:1648771200000 },
-      { id:17, genre:'business',     title:'The Making of a Manager',                                          author:'Julie Zhuo',           imageId:'1WFjjac7H8DKFjzMdz_kv1qUtnjBdG52P', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1651363200000 },
-      { id:18, genre:'philosophy',   title:'Freiheit für alle: Das Ende der Arbeit wie wir sie kannten',     author:'Richard David Precht', imageId:'1Sjvt1o-pbf-BNoYq6bw0FEXJ4J93Fc4O', summaryId:'14TkM7hUS-czDSIhfGQLFjMWDV3noikeL', notes:'', keyIdeas:[], addedAt:1654041600000 },
-      { id:19, genre:'biographies',  title:'Freedom in Exile: Autobiography of the Dalai Lama',              author:'14th Dalai Lama',      imageId:'1_l_6ocBMrfd4NX43ILF8Nqyx8-JhEOrA', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1656633600000 },
-      { id:20, genre:'philosophy',   title:'Von der Pflicht: Eine Betrachtung',                               author:'Richard David Precht', imageId:'1QIA6mrnkmj5nhSyR6EVFF8Mb-KVntuP8', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1659312000000 },
-      { id:21, genre:'startups',     title:'Zero to One',                                                      author:'Peter Thiel',          imageId:'1y3CW7ETKFSu2XsGIRKZmz5hETWKk7JnE', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1661990400000 },
+      { id:1,  genre:'nature',        title:'How to Avoid a Climate Disaster',                                    author:'Bill Gates',           coverUrl:SEED_COVER_URLS[1],  imageId:'1tPCpHXtcsNMOPfPoMDSX7TvKLR6RSFS7', summaryId:'1iLQGdcH-D7rTXiVPcoMCg08spZlgTxAb', notes:'', keyIdeas:[], addedAt:1609459200000 },
+      { id:2,  genre:'biographies',  title:'A Spy and a Traitor',                                               author:'Ben Macintyre',        coverUrl:SEED_COVER_URLS[2],  imageId:'1ZsyPryKfzvjo2W3Zeyj-pWt_ESiHzqFj', summaryId:'1FpzllTG1_O0VDbtp8YTUlE690PjYjohl', notes:'', keyIdeas:[], addedAt:1612137600000 },
+      { id:3,  genre:'health',       title:'The Body: A Guide for Occupants',                                   author:'Bill Bryson',          coverUrl:SEED_COVER_URLS[3],  imageId:'178yf8L1DaoiJj85rugA3JndFrZEVMjYW', summaryId:'1IIwokYk_liyL-VpzOdtqcFPMgZpZsCfz', notes:'', keyIdeas:[], addedAt:1614556800000 },
+      { id:4,  genre:'startups',     title:'Blitzscaling',                                                      author:'Reid Hoffman',         coverUrl:SEED_COVER_URLS[4],  imageId:'1mAN25PROZPN-lKg3Z5lCrZXqV-lunuoW', summaryId:'1GQRg-w31oGBSo_WpRbB4MYb8CwPmiJOI', notes:'', keyIdeas:[], addedAt:1617235200000 },
+      { id:5,  genre:'science',      title:'A Field Guide to Lies and Statistics',                              author:'Daniel Levitin',       coverUrl:SEED_COVER_URLS[5],  imageId:'1XDaAaYILU24k1_Y2cGvJYvCajVIpqUVk', summaryId:'1IndNhz7XMF8x9wInX6ppVNXGmPbgk71h', notes:'', keyIdeas:[], addedAt:1619827200000 },
+      { id:6,  genre:'history',      title:'Homo Deus: A Brief History of Tomorrow',                           author:'Yuval Noah Harari',    coverUrl:SEED_COVER_URLS[6],  imageId:'1dSQBeLemO5NljC17_krZGkQIu7EeHP4b', summaryId:'1I6GyPk_pt0aoiCduIcQ1AnO5Zy_V-4HE', notes:'', keyIdeas:[], addedAt:1622505600000 },
+      { id:7,  genre:'history',      title:'Sapiens: A Brief History of Humankind',                            author:'Yuval Noah Harari',    coverUrl:SEED_COVER_URLS[7],  imageId:'1SzK0LajaoMvJzZ9CXgztysMzuvGrjssB', summaryId:'1IldcM49vg2VviAyRCM2-38-R4YkTBW12', notes:'', keyIdeas:[], addedAt:1625097600000 },
+      { id:8,  genre:'science',      title:'What If?: Serious Scientific Answers to Absurd Hypothetical Questions', author:'Randall Munroe', coverUrl:SEED_COVER_URLS[8],  imageId:'1x5TdmcCGVaXRcobRLLEbLMaW-o8lkBJp', summaryId:'1Gez8oM8Yt0-gO7WSeFM8en198Is3RXh7', notes:'', keyIdeas:[], addedAt:1627776000000 },
+      { id:9,  genre:'psychology',   title:'The Happiness Advantage',                                          author:'Shawn Achor',          coverUrl:SEED_COVER_URLS[9],  imageId:'1lGMSRZD6kZ1Og33g2J1N53Q6sdJd2kF7', summaryId:'1IwCAQk02eBhUU4JIdtst5i1JcJBj2NFN', notes:'', keyIdeas:[], addedAt:1630454400000 },
+      { id:10, genre:'health',       title:"Lifespan: Why We Age — and Why We Don't Have To",                  author:'David A. Sinclair',    coverUrl:SEED_COVER_URLS[10], imageId:'15orXZ_1oagzzPF9XA-bdSs4uxiD7fFsE', summaryId:'1G9D6lJfHVcEI6YXxB0QHHKcSz72IlFZL', notes:'', keyIdeas:[], addedAt:1633046400000 },
+      { id:11, genre:'health',       title:'Why We Sleep: The New Science of Sleep and Dreams',                author:'Matthew Walker',       coverUrl:SEED_COVER_URLS[11], imageId:'1UN-VkBo5_06KJTDxh8g1TPXwlNgl6ijJ', summaryId:'1Gx6uN9pVsw0NUrWoQ9aQZEs0LoEK0wUB', notes:'', keyIdeas:[], addedAt:1635724800000 },
+      { id:12, genre:'psychology',   title:'Influence: The Psychology of Persuasion',                          author:'Robert B. Cialdini',   coverUrl:SEED_COVER_URLS[12], imageId:'1qAoKRFZkz21Xh-vwqDz19ny48zPPf_7z', summaryId:'1GZ3pXxY8LNkJmLmB7oxSt4xGBR3owrMO', notes:'', keyIdeas:[], addedAt:1638316800000 },
+      { id:13, genre:'startups',     title:'The Lean Startup',                                                  author:'Eric Ries',            coverUrl:SEED_COVER_URLS[13], imageId:'12ZL-oLtACGKkocVphif3YdhisRk4GOaB', summaryId:'1GoQ13RusBG__RALkZZDKTHufNNyPOdxW', notes:'', keyIdeas:[], addedAt:1640995200000 },
+      { id:14, genre:'startups',     title:'Secrets of Sand Hill Road',                                        author:'Scott Kupor',          coverUrl:SEED_COVER_URLS[14], imageId:'1zPDQ3gPSOnf6Q1ZJ9ab4l88BwcINXfEq', summaryId:'1GjDOSTp2avXSWoWGorG_lMGlnO-Cpb86', notes:'', keyIdeas:[], addedAt:1643673600000 },
+      { id:15, genre:'philosophy',   title:'Erkenne die Welt: Geschichte der Philosophie 1',                  author:'Richard David Precht', coverUrl:SEED_COVER_URLS[15], imageId:'1s9XX4yg1fCAw_KT3b0vHjsVk9cvNlo03', summaryId:'1cH_SYMO_1nctWGdBPfx8qD7i2KF8Qu80', notes:'', keyIdeas:[], addedAt:1646092800000 },
+      { id:16, genre:'psychology',   title:'Emotional Intelligence',                                            author:'Daniel Goleman',       coverUrl:SEED_COVER_URLS[16], imageId:'1WjGqvv4pepSITQgZnRnxONs23bMd5Vhe', summaryId:'1TrkrCuW_CX8FNh3s4dVaKfpIWYA6OU94', notes:'', keyIdeas:[], addedAt:1648771200000 },
+      { id:17, genre:'leadership',    title:'The Making of a Manager',                                          author:'Julie Zhuo',           coverUrl:SEED_COVER_URLS[17], imageId:'1WFjjac7H8DKFjzMdz_kv1qUtnjBdG52P', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1651363200000 },
+      { id:18, genre:'philosophy',   title:'Freiheit für alle: Das Ende der Arbeit wie wir sie kannten',     author:'Richard David Precht', coverUrl:SEED_COVER_URLS[18], imageId:'1Sjvt1o-pbf-BNoYq6bw0FEXJ4J93Fc4O', summaryId:'14TkM7hUS-czDSIhfGQLFjMWDV3noikeL', notes:'', keyIdeas:[], addedAt:1654041600000 },
+      { id:19, genre:'spirituality',  title:'Freedom in Exile: Autobiography of the Dalai Lama',              author:'14th Dalai Lama',      coverUrl:SEED_COVER_URLS[19], imageId:'1_l_6ocBMrfd4NX43ILF8Nqyx8-JhEOrA', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1656633600000 },
+      { id:20, genre:'philosophy',   title:'Von der Pflicht: Eine Betrachtung',                               author:'Richard David Precht', coverUrl:SEED_COVER_URLS[20], imageId:'1QIA6mrnkmj5nhSyR6EVFF8Mb-KVntuP8', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1659312000000 },
+      { id:21, genre:'startups',     title:'Zero to One',                                                      author:'Peter Thiel',          coverUrl:SEED_COVER_URLS[21], imageId:'1y3CW7ETKFSu2XsGIRKZmz5hETWKk7JnE', summaryId:'',                                 notes:'', keyIdeas:[], addedAt:1661990400000 },
     ];
 
     const driveImg = (id) => id ? `https://drive.google.com/thumbnail?id=${id}&sz=w400` : '';
@@ -923,6 +1008,27 @@
     }
 
     // ============================================================================
+    // GENRE GROUPED OPTIONS — renders <optgroup> sections in any <select>
+    // ============================================================================
+    function GenreOptions({ genres, includeAll = false }) {
+      const sections = [];
+      const seen = new Set();
+      genres.forEach(g => { if (!seen.has(g.section)) { seen.add(g.section); sections.push(g.section); } });
+      return (
+        <>
+          {includeAll && <option value="all">All Genres</option>}
+          {sections.map(sec => (
+            <optgroup key={sec} label={`— ${sec} —`}>
+              {genres.filter(g => g.section === sec).map(g => (
+                <option key={g.id} value={g.id}>{g.label}</option>
+              ))}
+            </optgroup>
+          ))}
+        </>
+      );
+    }
+
+    // ============================================================================
     // LOGO COMPONENT
     // ============================================================================
 
@@ -968,17 +1074,31 @@
 
     function LibraryScreen({ books, genres, onSelectBook, apiKey, onNavigate, driveToken, driveEmail, extractionProgress }) {
       const [search, setSearch] = useState('');
+      const [activeSection, setActiveSection] = useState('all');
       const [selectedGenre, setSelectedGenre] = useState('all');
+
+      // When section changes, reset genre filter
+      const handleSectionChange = (sectionId) => {
+        setActiveSection(sectionId);
+        setSelectedGenre('all');
+      };
+
+      // Genres visible in dropdown = filtered by active section
+      const visibleGenres = activeSection === 'all'
+        ? genres
+        : genres.filter(g => g.section === activeSection);
 
       const filtered = books.filter(b => {
         const matchSearch = !search || b.title.toLowerCase().includes(search.toLowerCase()) || b.author.toLowerCase().includes(search.toLowerCase());
+        const bookSection = genres.find(g => g.id === b.genre)?.section;
+        const matchSection = activeSection === 'all' || bookSection === activeSection;
         const matchGenre = selectedGenre === 'all' || b.genre === selectedGenre;
-        return matchSearch && matchGenre;
+        return matchSearch && matchSection && matchGenre;
       });
 
       const sorted = [...filtered].sort((a, b) => b.addedAt - a.addedAt);
       const genreObj = genres.find(g => g.id === selectedGenre);
-      const count = selectedGenre === 'all' ? sorted.length : sorted.length;
+      const count = sorted.length;
 
       return (
         <>
@@ -1015,22 +1135,35 @@
               />
             </div>
 
+            {/* Section pills */}
+            <div className="section-pills">
+              {SECTIONS.map(s => (
+                <button
+                  key={s.id}
+                  className={`section-pill${activeSection === s.id ? ' active' : ''}`}
+                  onClick={() => handleSectionChange(s.id)}
+                >
+                  {s.emoji} {s.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Genre dropdown — narrows to active section */}
             <div className="genre-dropdown">
               <select
                 className="genre-select"
                 value={selectedGenre}
                 onChange={(e) => setSelectedGenre(e.target.value)}
               >
-                <option value="all">All Genres</option>
-                {genres.map(g => (
-                  <option key={g.id} value={g.id}>{g.label}</option>
-                ))}
+                <option value="all">All {activeSection === 'all' ? 'Genres' : SECTIONS.find(s=>s.id===activeSection)?.label}</option>
+                <GenreOptions genres={visibleGenres} />
               </select>
             </div>
 
             {count > 0 && (
               <div className="section-label">
-                {count === 1 ? `1 book` : `${count} books`} {selectedGenre !== 'all' ? `in ${genreObj?.label || 'Genre'}` : ''}
+                {count === 1 ? `1 book` : `${count} books`}
+                {selectedGenre !== 'all' ? ` in ${genreObj?.label || ''}` : activeSection !== 'all' ? ` in ${SECTIONS.find(s=>s.id===activeSection)?.label}` : ''}
               </div>
             )}
 
@@ -1371,12 +1504,24 @@
 
     function PodcastsScreen({ podcasts, genres, onSelectPodcast, onNavigate }) {
       const [search, setSearch] = useState('');
+      const [activeSection, setActiveSection] = useState('all');
       const [selectedGenre, setSelectedGenre] = useState('all');
+
+      const handleSectionChange = (sectionId) => {
+        setActiveSection(sectionId);
+        setSelectedGenre('all');
+      };
+
+      const visibleGenres = activeSection === 'all'
+        ? genres
+        : genres.filter(g => g.section === activeSection);
 
       const filtered = podcasts.filter(p => {
         const matchSearch = !search || p.title.toLowerCase().includes(search.toLowerCase());
+        const podSection = genres.find(g => g.id === p.topic)?.section;
+        const matchSection = activeSection === 'all' || podSection === activeSection;
         const matchGenre = selectedGenre === 'all' || p.topic === selectedGenre;
-        return matchSearch && matchGenre;
+        return matchSearch && matchSection && matchGenre;
       });
 
       const sorted = [...filtered].sort((a, b) => b.addedAt - a.addedAt);
@@ -1403,16 +1548,26 @@
               />
             </div>
 
+            <div className="section-pills">
+              {SECTIONS.map(s => (
+                <button
+                  key={s.id}
+                  className={`section-pill${activeSection === s.id ? ' active' : ''}`}
+                  onClick={() => handleSectionChange(s.id)}
+                >
+                  {s.emoji} {s.label}
+                </button>
+              ))}
+            </div>
+
             <div className="genre-dropdown">
               <select
                 className="genre-select"
                 value={selectedGenre}
                 onChange={(e) => setSelectedGenre(e.target.value)}
               >
-                <option value="all">All Topics</option>
-                {genres.map(g => (
-                  <option key={g.id} value={g.id}>{g.label}</option>
-                ))}
+                <option value="all">All {activeSection === 'all' ? 'Topics' : SECTIONS.find(s=>s.id===activeSection)?.label}</option>
+                <GenreOptions genres={visibleGenres} />
               </select>
             </div>
 
@@ -1765,7 +1920,7 @@
                 <div className="form-group">
                   <label className="form-label">Genre</label>
                   <select className="form-input" value={selectedGenre} onChange={e => setSelectedGenre(e.target.value)}>
-                    {genres.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
+                    <GenreOptions genres={genres} />
                   </select>
                 </div>
 
@@ -1800,7 +1955,7 @@
                 <div className="form-group">
                   <label className="form-label">Topic</label>
                   <select className="form-input" value={podcastTopic} onChange={e => setPodcastTopic(e.target.value)}>
-                    {genres.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
+                    <GenreOptions genres={genres} />
                   </select>
                 </div>
                 <button className="btn btn-primary" onClick={handleAddPodcast} style={{ width: '100%', marginTop: '16px' }} disabled={isLoading}>
@@ -2681,7 +2836,9 @@
         })();
       }, [authState]);
 
-      // ── Auto-fetch missing book covers from Google Books API ────────────────
+      // ── Auto-fill missing book covers ────────────────────────────────────────
+      // Seeded books: use hardcoded Open Library ISBN URLs (no API call needed)
+      // User-added books: try Google Books API as fallback
       const coverBackfillRef = useRef(false);
       useEffect(() => {
         if (authState !== 'ready' || !books) return;
@@ -2691,6 +2848,13 @@
         coverBackfillRef.current = true;
         (async () => {
           for (const book of missing) {
+            // Seeded books: apply known Open Library cover URL instantly
+            if (SEED_COVER_URLS[book.id]) {
+              setBooks(prev => prev.map(b => b.id === book.id
+                ? { ...b, coverUrl: SEED_COVER_URLS[book.id] } : b));
+              continue;
+            }
+            // User-added books: try Google Books API
             try {
               const q = encodeURIComponent(`${book.title} ${book.author}`);
               const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=5`);
@@ -2705,8 +2869,7 @@
                 }
               }
             } catch {}
-            // Small pause to avoid hammering the API
-            await new Promise(r => setTimeout(r, 300));
+            await new Promise(r => setTimeout(r, 400));
           }
         })();
       }, [authState, books]);
