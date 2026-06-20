@@ -2357,8 +2357,10 @@
       const [books, setBooks] = useState(null);
       const [podcasts, setPodcasts] = useState(null);
       const [genres, setGenres] = useState(null);
-      // Settings (API key, client ID) stay local — they're device config, not library data
-      const [settings, setSettings] = useLocalStorage('booksum_v2_settings', { apiKey: '', googleClientId: '', language: 'en' });
+      // Hardcoded Google OAuth Client ID — pre-filled so users never need to enter it manually
+      const GOOGLE_CLIENT_ID = '645982162232-jt5q7oua2lroogdoi8aej53o2ag8p91g.apps.googleusercontent.com';
+      // Settings (API key) stay local — they're device config, not library data
+      const [settings, setSettings] = useLocalStorage('booksum_v2_settings', { apiKey: '', googleClientId: GOOGLE_CLIENT_ID, language: 'en' });
 
       // Auth state: 'loading' | 'signin' | 'ready'
       const [authState, setAuthState] = useState('loading');
@@ -2413,7 +2415,7 @@
       // Try silent auto-reconnect when app opens
       useEffect(() => {
         const wasConnected = localStorage.getItem('booksum_drive_connected') === 'true';
-        const clientId = settings.googleClientId;
+        const clientId = settings.googleClientId || GOOGLE_CLIENT_ID;
         if (!wasConnected || !clientId) { setAuthState('signin'); return; }
         // Wait for GIS to load (script is async)
         const tryConnect = () => {
@@ -2503,16 +2505,13 @@
       }, []);
 
       const connectDrive = () => {
-        if (!settings.googleClientId) {
-          setDriveError('Please enter your Google Client ID first.');
-          return;
-        }
+        const clientId = settings.googleClientId || GOOGLE_CLIENT_ID;
         if (!window.google?.accounts?.oauth2) {
           setDriveError('Google library not loaded — check your internet connection.');
           return;
         }
         if (!tokenClientRef.current) {
-          tokenClientRef.current = buildTokenClient(settings.googleClientId);
+          tokenClientRef.current = buildTokenClient(clientId);
         }
         tokenClientRef.current?.requestAccessToken();
       };
